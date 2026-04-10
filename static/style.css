@@ -1,0 +1,302 @@
+/* =========================
+   RESET
+========================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ✅ FIXED SCROLL ISSUE */
+body {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #e2e8f0;
+    overflow-y: auto;   /* ✅ allows scrolling */
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.container {
+    display: flex;
+    min-height: 100vh;   /* ✅ flexible instead of fixed */
+    padding: 20px;
+    gap: 20px;
+}
+
+/* LEFT PANEL */
+.left {
+    width: 28%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* RIGHT PANEL (FIXED) */
+.right {
+    width: 72%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* =========================
+   LOGO
+========================= */
+.logo-main {
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #38bdf8, #22c55e);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo-sub {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* =========================
+   STATUS
+========================= */
+.status {
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.safe {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+
+.warning {
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+}
+
+.danger {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+}
+
+.status.critical {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid #ef4444;
+    animation: pulseAlert 1.5s infinite;
+}
+
+@keyframes pulseAlert {
+    0% { box-shadow: 0 0 0px rgba(239,68,68,0.6); }
+    50% { box-shadow: 0 0 15px rgba(239,68,68,1); }
+    100% { box-shadow: 0 0 0px rgba(239,68,68,0.6); }
+}
+
+/* =========================
+   CARDS
+========================= */
+.card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56,189,248,0.25);
+}
+
+.card div {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.card span {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* =========================
+   CONTROL BUTTONS
+========================= */
+.controls {
+    margin-top: 10px;
+}
+
+.controls button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.25s;
+    font-weight: 500;
+}
+
+.controls button:hover {
+    background: #38bdf8;
+    color: #0f172a;
+    box-shadow: 0 0 10px rgba(56,189,248,0.5);
+}
+
+/* =========================
+   FILTER BAR
+========================= */
+.filter-bar {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-bar input {
+    flex: 1;
+    padding: 8px;
+    background: #020617;
+    color: #38bdf8;
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 8px;
+    outline: none;
+}
+
+.filter-bar input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 6px rgba(56,189,248,0.4);
+}
+
+/* =========================
+   IPS
+========================= */
+h4 {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+#ips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ip {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid rgba(239,68,68,0.4);
+    color: #ef4444;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.ip:hover {
+    background: rgba(239,68,68,0.4);
+    transform: scale(1.05);
+}
+
+/* =========================
+   GRAPH
+========================= */
+.graph-box {
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 12px;
+    height: 300px;   /* fixed height */
+}
+
+.graph-title {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+/* =========================
+   LOGS CONTAINER (NEW FIX)
+========================= */
+.logs-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* =========================
+   TERMINAL
+========================= */
+.terminal-title {
+    font-size: 15px;
+    color: #38bdf8;
+    margin-bottom: 4px;
+}
+
+.terminal {
+    flex: 1;
+    background: #020617;
+    border-radius: 14px;
+    padding: 15px;
+    overflow-y: auto;
+    border: 1px solid rgba(56,189,248,0.2);
+    font-family: monospace;
+    min-height: 300px;
+}
+
+/* LOG */
+.log {
+    font-size: 13px;
+    padding: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: 0.2s;
+}
+
+.log:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+.terminal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.terminal::-webkit-scrollbar-thumb {
+    background: #38bdf8;
+    border-radius: 10px;
+}
+
+/* =========================
+   ALERT
+========================= */
+.alert-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ef4444;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    display: none;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(239,68,68,0.8);
+}
+.chart-container {
+    height: 350px;
+    width: 100%;
+}
+
+.graph-box {
+    height: 420px;
+}
+
+#attack-map {
+    height: 300px;
+    width: 100%;
+}

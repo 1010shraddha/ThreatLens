@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ThreatLens</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet-ant-path/dist/leaflet-ant-path.min.js"></script>
+
+    <style>
+        #attack-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 350px;
+        }
+
+        #trafficChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .graph-box {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="left">
+    <div class="logo">
+        <div class="logo-main">ThreatLens</div>
+        <div class="logo-sub">Real-Time Intrusion Detection</div>
+    </div>
+
+    <div id="status" class="status safe">SAFE</div>
+
+    <div class="card"><div>Packets</div><span id="packets">0</span></div>
+    <div class="card"><div>Alerts</div><span id="alerts">0</span></div>
+    <div class="card"><div>Encryption</div><span id="enc">0%</span></div>
+    <div class="card"><div>Top IP</div><span id="topip">-</span></div>
+
+    <h4>⚠ Suspicious</h4>
+    <div id="ips"></div>
+
+    <div class="controls">
+        <button onclick="clearScreen()">🧹 Clear Screen</button>
+        <button onclick="downloadLogs()">⬇ Export Logs</button>
+        <button onclick="downloadReport()">📄 Download Report</button>
+    </div>
+</div>
+
+<div class="right">
+
+<div class="graph-box">
+    <div class="graph-title">📊 Traffic vs Alerts</div>
+    <div class="chart-container">
+        <canvas id="trafficChart"></canvas>
+    </div>
+</div>
+
+<div class="graph-box">
+    <div class="graph-title">🌍 Live Attack Map</div>
+    <div id="attack-map"></div>
+</div>
+
+<div class="filter-bar">
+    <input id="searchIP" placeholder="Filter by IP">
+</div>
+
+<div class="logs-container">
+    <div class="terminal-title">📡 LIVE TRAFFIC</div>
+    <div id="logs" class="terminal"></div>
+</div>
+
+</div>
+</div>
+
+<div id="alertBox" class="alert-box">🚨 HIGH RISK DETECTED</div>
+
+<script>
+let labels = [];
+let packetData = [];
+let alertData = [];
+
+let lastPacketCount = 0;
+let lastAlertCount = 0;
+
+let markers = {};
+let heatPoints = [];
+let heatLayer = null;
+
+let logHistory = [];
+
+// ================= CHART =================
+const chart = new Chart(document.getElementById('trafficChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Packets',
+                data: packetData,
+                borderColor: "#38bdf8",
+                backgroundColor: "rgba(56,189,248,0.2)",
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Alerts',
+                data: alertData,
+                borderColor: "#ef4444",
+                backgroundColor: "rgba(239,68,68,0.2)",
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+            legend: { labels: { color: "#ccc" } }
+        },
+        scales: {
+            x: { ticks: { color: "#aaa" } },
+            y: {
+                beginAtZero: true,
+                ticks: { color: "#aaa" }
+            }
+        }
+    }
+});
+
+// ================= MAP =================
+const map = L.map('attack-map').setView([20, 0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// ================= STATS =================
+async function fetchStats() {
+    const res = await fetch("/api/stats");
+    const data = await res.json();
+
+    document.getElementById("packets").innerText = data.total_packets;
+    document.getElementById("alerts").innerText = data.alerts;
+    document.getElementById("enc").innerText = data.encryption_ratio + "%";
+    document.getElementById("topip").innerText = data.top_ip;
+
+    const statusEl = document.getElementById("status");
+
+    if (data.status === "CRITICAL") {
+        statusEl.innerText = "DANGER";
+        statusEl.className = "status danger";
+    }
+    else if (data.status === "ALERT") {
+        statusEl.innerText = "WARNING";
+        statusEl.className = "status warning";
+    }
+    else {
+        statusEl.innerText = "SAFE";
+        statusEl.className = "status safe";
+    }
+
+    const currentTime = new Date().toLocaleTimeString();
+
+    const packetDiff = data.total_packets - lastPacketCount;
+    const alertDiff = data.alerts - lastAlertCount;
+
+    lastPacketCount = data.total_packets;
+    lastAlertCount = data.alerts;
+
+    labels.push(currentTime);
+    packetData.push(packetDiff >= 0 ? packetDiff : 0);
+    alertData.push(alertDiff >= 0 ? alertDiff : 0);
+
+    if (labels.length > 15) {
+        labels.shift();
+        packetData.shift();
+        alertData.shift();
+    }
+
+    chart.update();
+}
+
+// ================= LOGS + MAP =================
+async function fetchLogs() {
+    const res = await fetch("/logs");
+    const logs = await res.json();
+
+    const logDiv = document.getElementById("logs");
+    const ipContainer = document.getElementById("ips");
+
+    logs.forEach(log => {
+        if (!logHistory.some(l =>
+            l.timestamp === log.timestamp &&
+            l.source_ip === log.source_ip
+        )) {
+            logHistory.push(log);
+        }
+    });
+
+    if (logHistory.length > 50) logHistory.shift();
+
+    logDiv.innerHTML = "";
+    ipContainer.innerHTML = "";
+
+    if (heatLayer) map.removeLayer(heatLayer);
+
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    markers = {};
+    heatPoints = [];
+
+    const suspiciousSet = new Set();
+    const uniqueIPs = new Set();
+
+    const search = document.getElementById("searchIP").value.toLowerCase();
+
+    logHistory
+        .filter(log => log.source_ip.toLowerCase().includes(search))
+        .forEach(log => {
+
+        const el = document.createElement("div");
+        el.style.color = log.risk_score > 50 ? "#ef4444" :
+                         log.risk_score > 20 ? "#facc15" : "#22c55e";
+
+        el.innerText =
+        `[${log.timestamp}] ${log.event_type} → ${log.source_ip} | Risk: ${log.risk_score}`;
+
+        logDiv.appendChild(el);
+
+        const isSuspicious = log.is_suspicious === true || log.risk_score > 50;
+
+        if (isSuspicious) suspiciousSet.add(log.source_ip);
+
+        if (isSuspicious && !uniqueIPs.has(log.source_ip)) {
+
+            uniqueIPs.add(log.source_ip);
+
+            let lat = log.location?.lat ?? 20 + Math.random()*20;
+            let lon = log.location?.lon ?? 70 + Math.random()*20;
+
+            let marker = L.circleMarker([lat, lon], {
+                radius: 12,
+                color: "black",
+                fillColor: "#ef4444",
+                fillOpacity: 1,
+                weight: 3
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <b>🔥 Suspicious IP</b><br>
+                IP: ${log.source_ip}<br>
+                Risk: ${log.risk_score}<br>
+                Country: ${log.location?.country || "Unknown"}
+            `);
+
+            markers[log.source_ip] = marker;
+            heatPoints.push([lat, lon, 1]);
+        }
+    });
+
+    // 🔥 FILTERED SUSPICIOUS LIST
+    suspiciousSet.forEach(ip => {
+        if (!ip.toLowerCase().includes(search)) return;
+
+        const div = document.createElement("div");
+        div.innerText = ip;
+        div.style.color = "#ef4444";
+        div.style.fontWeight = "bold";
+        ipContainer.appendChild(div);
+    });
+
+    if (heatPoints.length > 0) {
+        heatLayer = L.heatLayer(heatPoints).addTo(map);
+    }
+
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+// ================= SMART REPORT =================
+function downloadReport() {
+
+    let report = "===== ThreatLens Security Report =====\n\n";
+
+    report += "=== Summary ===\n";
+    report += "Total Logs: " + logHistory.length + "\n\n";
+
+    let attackTypes = {};
+    logHistory.forEach(log => {
+        attackTypes[log.event_type] =
+            (attackTypes[log.event_type] || 0) + 1;
+    });
+
+    report += "=== Attack Types ===\n";
+    for (let type in attackTypes) {
+        report += `${type}: ${attackTypes[type]}\n`;
+    }
+
+    report += "\n=== Top Attackers ===\n";
+
+    let attackers = {};
+    logHistory.forEach(log => {
+        attackers[log.source_ip] =
+            (attackers[log.source_ip] || 0) + 1;
+    });
+
+    Object.entries(attackers)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0,5)
+        .forEach(([ip,count]) => {
+            report += `${ip} → ${count} alerts\n`;
+        });
+
+    report += "\n=== Attack Structure Analysis ===\n";
+
+    if (attackTypes["PORT_SCAN"]) report += "- Port scanning detected\n";
+    if (attackTypes["BURST_ATTACK"]) report += "- Burst attack detected\n";
+    if (attackTypes["SMALL_PACKET_ATTACK"]) report += "- Small packet attack\n";
+    if (attackTypes["HIGH_PACKET_RATE"] || attackTypes["DOS_ATTACK"])
+        report += "- DoS behavior detected\n";
+
+    report += "\n=== Detailed Logs ===\n";
+
+    logHistory.forEach(log => {
+        report += `[${log.timestamp}] ${log.event_type} | ${log.source_ip} | Risk: ${log.risk_score}\n`;
+    });
+
+    const blob = new Blob([report], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ThreatLens_Report.txt";
+    a.click();
+}
+
+// ================= UI =================
+function clearScreen(){
+    document.getElementById("logs").innerHTML="";
+    logHistory=[];
+}
+
+function downloadLogs(){
+    window.open("/logs");
+}
+
+// ================= AUTO REFRESH =================
+setInterval(() => {
+    fetchStats();
+    fetchLogs();
+}, 2000);
+
+fetchStats();
+fetchLogs();
+</script>
+
+</body>
+</html>
