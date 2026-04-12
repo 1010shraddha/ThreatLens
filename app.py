@@ -1,116 +1,3 @@
-# from flask import Flask, jsonify, render_template
-# import stats
-# import detector
-# import json
-# import os
-
-# # ✅ NEW IMPORTS (ONLY ADDITION)
-# import smtplib
-# from email.mime.text import MIMEText
-
-# app = Flask(__name__)
-
-# # =========================
-# # EMAIL FUNCTION (NEW)
-# # =========================
-# def send_alert_email(message):
-
-#     sender = "shettyshraddha2004@gmail.com"
-#     receiver = "shraddhacyberstudy@gmail.com"
-#     password = "hwaddtadojknpbbb"   # 🔐 use Gmail App Password
-
-#     msg = MIMEText(message)
-#     msg["Subject"] = "🚨 ThreatLens Alert"
-#     msg["From"] = sender
-#     msg["To"] = receiver
-
-#     try:
-#         server = smtplib.SMTP("smtp.gmail.com", 587)
-#         server.starttls()
-#         server.login(sender, password)
-#         server.sendmail(sender, receiver, msg.as_string())
-#         server.quit()
-#         print("✅ Alert email sent")
-#     except Exception as e:
-#         print("❌ Email error:", e)
-
-
-# # =========================
-# # HOME ROUTE
-# # =========================
-
-# @app.route("/")
-# def index():
-#     return render_template("dashboard.html")
-
-
-# # =========================
-# # API: STATS
-# # =========================
-
-# @app.route("/api/stats")
-# def get_stats():
-#     total_packets = stats.get_total_packets()
-#     encrypted_packets = stats.get_encrypted_packets()
-#     alerts = stats.get_alerts_count()
-#     status = stats.get_network_status()
-
-#     # 🚨 NEW: SEND EMAIL ON CRITICAL
-#     if status == "CRITICAL":
-#         send_alert_email("Critical threat detected in ThreatLens IDS. Immediate action required.")
-
-#     encryption_ratio = 0
-#     if total_packets > 0:
-#         encryption_ratio = (encrypted_packets / total_packets) * 100
-
-#     return jsonify({
-#         "total_packets": total_packets,
-#         "encrypted_packets": encrypted_packets,
-#         "alerts": alerts,
-#         "encryption_ratio": round(encryption_ratio, 2),
-#         "status": status,
-#         "top_ip": stats.get_top_ip(),
-#         "suspicious_ips": list(detector.get_suspicious_ips())
-#     })
-
-
-# # =========================
-# # API: LOGS (UPDATED)
-# # =========================
-
-# @app.route("/logs")
-# def get_logs():
-#     logs = []
-
-#     try:
-#         if os.path.exists("logs.txt"):
-#             with open("logs.txt", "r") as f:
-#                 for line in f:
-#                     try:
-#                         logs.append(json.loads(line.strip()))
-#                     except:
-#                         continue
-
-#         # 🔥 Sort latest first
-#         logs = sorted(logs, key=lambda x: x.get("timestamp", ""), reverse=True)
-
-#         # ✅ REMOVED LIMIT (IMPORTANT FIX)
-#         # logs = logs[:20]
-
-#     except Exception as e:
-#         print("Log read error:", e)
-
-#     return jsonify(logs)
-
-
-# # =========================
-# # RUN SERVER
-# # =========================
-
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
 from flask import Flask, jsonify, render_template
 import stats
 import detector
@@ -127,8 +14,8 @@ app = Flask(__name__)
 # =========================
 def send_alert_email():
 
-    sender = "shettyshraddha2004@gmail.com"
-    receiver = "shraddhacyberstudy@gmail.com"
+    sender = ""
+    receiver = ""
     password = "hwaddtadojknpbbb"
 
     # ✅ GET LATEST LOG DETAILS
