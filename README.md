@@ -1,10 +1,10 @@
-🚨 ThreatLens - Real-Time Intrusion Detection System
+ThreatLens - Real-Time Intrusion Detection System
 
 ThreatLens is a simple real-time Intrusion Detection System that monitors network traffic and detects suspicious activities. It shows live traffic data on a dashboard and alerts the user whenever something unusual happens.
 
 This project was built to understand how IDS systems work in a practical way.
 
- 🚀 What it does
+What it does
 
 * Monitors network traffic in real time
 * Detects suspicious IP activity
@@ -15,8 +15,7 @@ This project was built to understand how IDS systems work in a practical way.
 * Shows popup alerts on the dashboard
 
 ---
-
-## 🛠 Tech Used
+Tech Used
 
 * Frontend: HTML, CSS, JavaScript
 * Backend: Python (Flask)
@@ -26,7 +25,7 @@ This project was built to understand how IDS systems work in a practical way.
 
 ---
 
-## 📂 Project Structure
+Project Structure
 
 ```id="k2y1p4"
 ThreatLens/
@@ -56,13 +55,10 @@ ThreatLens/
 ---
 
 
-## 🎯 Why I made this
-
-This project was created to understand how real-world intrusion detection systems work, including traffic monitoring, attack detection, and alerting.
 
 ---
 
-## 🚀 Future Improvements
+##  Future Improvements
 
 * Auto-block suspicious IPs
 * PDF report generation
